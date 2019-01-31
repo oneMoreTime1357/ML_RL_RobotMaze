@@ -42,10 +42,11 @@ class Robot(object):
         """
         if self.testing:
             # TODO 1. No random choice when testing
-            self.epsilon = random.uniform(0, 1)
+            self.epsilon = 0
         else:
             # TODO 2. Update parameters when learning
-            self.epsilon -= 0.01
+            self.t += 1
+            self.epsilon -= 0.01 * self.t
         return self.epsilon
 
     def sense_state(self):
@@ -65,8 +66,9 @@ class Robot(object):
         # Qtable[state] ={'u':xx, 'd':xx, ...}
         # If Qtable[state] already exits, then do
         # not change it.
-        if state not in self.Qtable:
-            self.Qtable[state] = {'u':0.0, 'r':0.0, 'd':0.0, 'l':0.0}
+#         if state not in self.Qtable:
+#             self.Qtable[state] = {'u':0.0, 'r':0.0, 'd':0.0, 'l':0.0}
+        self.Qtable.setdefault(state, {a: 0.0 for a in self.valid_actions})
         
 
     def choose_action(self):
@@ -79,10 +81,7 @@ class Robot(object):
             # hint: generate a random number, and compare
             # it with epsilon
             random_num = random.uniform(0, 1)
-            if random_num < self.epsilon:
-                return True
-            else:
-                return False
+            return random_num <= self.epsilon
 
         if self.learning:
             if is_random_exploration():
@@ -106,8 +105,8 @@ class Robot(object):
             pass
             # TODO 8. When learning, update the q table according
             # to the given rules
-            r_t1 = r + self.gamma * max(self.Qtable[next_state].values())
-            self.Qtable[self.state][action] = self.Qtable[self.state][action] + self.alpha * (r_t1 - self.Qtable[self.state][action])
+            old_q = self.Qtable[self.state][action]
+            self.Qtable[self.state][action] = old_q + self.alpha * (r + self.gamma * max(self.Qtable[next_state].values()) - old_q)
                                                                                                                  
     def update(self):
         """
